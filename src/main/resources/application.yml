@@ -1,0 +1,22 @@
+datasource:
+  central-db:
+    jdbc-url: jdbc:sqlserver://localhost:1433;databaseName=CentralDB;encrypt=true;trustServerCertificate=true;
+    username: central_login
+    password: Central_password1
+    driverClassName: com.microsoft.sqlserver.jdbc.SQLServerDriver
+  branches:
+    first-branch-db:
+      url: jdbc:sqlserver://localhost:1433;databaseName=FirstBranchDB;encrypt=true;trustServerCertificate=true;
+      username: first_branch_login
+      password: First_branch_password1
+      driverClassName: com.microsoft.sqlserver.jdbc.SQLServerDriver
+    second-branch-db:
+      url: jdbc:sqlserver://localhost:1433;databaseName=SecondBranchDB;encrypt=true;trustServerCertificate=true;
+      username: second_branch_login
+      password: Second_branch_password1
+      driverClassName: com.microsoft.sqlserver.jdbc.SQLServerDriver
+    third-branch-db:
+      url: jdbc:sqlserver://localhost:1433;databaseName=ThirdBranchDB;encrypt=true;trustServerCertificate=true;
+      username: third_branch_login
+      password: Third_branch_password1
+      driverClassName: com.microsoft.sqlserver.jdbc.SQLServerDriver
