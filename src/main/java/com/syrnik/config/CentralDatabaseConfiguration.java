@@ -1,7 +1,10 @@
 package com.syrnik.config;
 
 import jakarta.persistence.EntityManagerFactory;
+import liquibase.integration.spring.SpringLiquibase;
+
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.autoconfigure.liquibase.LiquibaseProperties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.boot.orm.jpa.EntityManagerFactoryBuilder;
@@ -19,10 +22,8 @@ import java.util.Map;
 
 @Configuration
 @EnableTransactionManagement
-@EnableJpaRepositories(
-        entityManagerFactoryRef = "centralEntityManagerFactory",
-        transactionManagerRef = "centralTransactionManager",
-        basePackages = {"com.syrnik.repository.central"})
+@EnableJpaRepositories(entityManagerFactoryRef = "centralEntityManagerFactory",
+      transactionManagerRef = "centralTransactionManager", basePackages = {"com.syrnik.repository.central"})
 public class CentralDatabaseConfiguration {
 
     @Primary
@@ -34,18 +35,36 @@ public class CentralDatabaseConfiguration {
 
     @Primary
     @Bean
-    public LocalContainerEntityManagerFactoryBean centralEntityManagerFactory(
-            EntityManagerFactoryBuilder builder, @Qualifier("centralDataSource") DataSource dataSource) {
-        return builder.dataSource(dataSource)
-                .packages("com.syrnik.model.central")
-                .properties(Map.of("hibernate.dialect", "org.hibernate.dialect.SQLServerDialect"))
-                .persistenceUnit("central").build();
+    public LocalContainerEntityManagerFactoryBean centralEntityManagerFactory(EntityManagerFactoryBuilder builder,
+          @Qualifier("centralDataSource") DataSource dataSource) {
+        return builder
+              .dataSource(dataSource)
+              .packages("com.syrnik.model.central")
+              .properties(Map.of("hibernate.dialect", "org.hibernate.dialect.SQLServerDialect"))
+              .persistenceUnit("central")
+              .build();
     }
 
-    @Primary
     @Bean
     public PlatformTransactionManager centralTransactionManager(
-            @Qualifier("centralEntityManagerFactory") EntityManagerFactory entityManagerFactory) {
+          @Qualifier("centralEntityManagerFactory") EntityManagerFactory entityManagerFactory) {
         return new JpaTransactionManager(entityManagerFactory);
+    }
+
+    @Bean
+    @ConfigurationProperties(prefix = "datasource.central-db.liquibase")
+    public LiquibaseProperties centralLiquibaseProperties() {
+        return new LiquibaseProperties();
+    }
+
+    @Bean
+    public SpringLiquibase centralLiquibase(@Qualifier("centralDataSource") DataSource dataSource,
+          @Qualifier("centralLiquibaseProperties") LiquibaseProperties liquibaseProperties) {
+        SpringLiquibase springLiquibase = new SpringLiquibase();
+        springLiquibase.setDataSource(dataSource);
+        springLiquibase.setChangeLog(liquibaseProperties.getChangeLog());
+        springLiquibase.setContexts(liquibaseProperties.getContexts());
+        springLiquibase.setDefaultSchema(liquibaseProperties.getDefaultSchema());
+        return springLiquibase;
     }
 }

@@ -1,0 +1,8 @@
+databaseChangeLog:
+  - changeSet:
+      id: 202306101400-1
+      author: Kacper Syrnik
+      comment: Creating tables
+      changes:
+        - sqlFile:
+            path: scripts/branch/001-branch-db.sql

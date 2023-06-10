@@ -6,8 +6,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication
 public class DistributedTransactionsApiApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(DistributedTransactionsApiApplication.class, args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(DistributedTransactionsApiApplication.class, args);
+    }
 
 }
