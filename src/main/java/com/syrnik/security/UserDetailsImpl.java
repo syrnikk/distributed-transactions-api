@@ -3,7 +3,6 @@ package com.syrnik.security;
 import java.util.Collection;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-import com.syrnik.enums.Role;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -11,7 +10,7 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 public class UserDetailsImpl implements UserDetails {
-
+    private Integer id;
     private String username;
     private String password;
     private String branch;

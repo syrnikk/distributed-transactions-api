@@ -6,7 +6,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.syrnik.dto.RegisterDTO;
+import com.syrnik.dto.UserClientDTO;
 import com.syrnik.enums.Role;
+import com.syrnik.exception.EntityNotFoundException;
 import com.syrnik.model.branch.Client;
 import com.syrnik.model.central.Branch;
 import com.syrnik.model.central.User;
@@ -49,5 +51,25 @@ public class UserService {
         client.setUserId(user.getId());
 
         clientRepository.save(client);
+    }
+
+    @Transactional("chainedTransactionManager")
+    public UserClientDTO getFullUserInfo(Integer id) {
+        User user = userRepository.findById(id).orElseThrow(EntityNotFoundException::new);
+        Client client = clientRepository.findByUserId(id).orElseThrow(EntityNotFoundException::new);
+        return UserClientDTO
+              .builder()
+              .id(user.getId())
+              .login(user.getLogin())
+              .role(user.getRole())
+              .branchName(user.getBranch().getName())
+              .firstName(client.getFirstName())
+              .secondName(client.getSecondName())
+              .lastName(client.getLastName())
+              .email(client.getEmail())
+              .dateOfBirth(client.getDateOfBirth())
+              .placeOfBirth(client.getPlaceOfBirth())
+              .gender(client.getGender())
+              .build();
     }
 }
