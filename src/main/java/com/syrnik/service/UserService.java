@@ -1,6 +1,8 @@
 package com.syrnik.service;
 
 import java.util.Optional;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,9 +17,12 @@ import com.syrnik.model.central.User;
 import com.syrnik.repository.branch.ClientRepository;
 import com.syrnik.repository.central.BranchRepository;
 import com.syrnik.repository.central.UserRepository;
+import com.syrnik.security.UserDetailsImpl;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserService {
@@ -71,5 +76,18 @@ public class UserService {
               .placeOfBirth(client.getPlaceOfBirth())
               .gender(client.getGender())
               .build();
+    }
+
+    public Optional<User> findById(Integer id) {
+        return userRepository.findById(id);
+    }
+
+    public UserDetailsImpl getLoggedInUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if(authentication.getPrincipal() instanceof UserDetailsImpl userDetails) {
+            return userDetails;
+        }
+        log.warn("Not authenticated");
+        throw new IllegalStateException("Not authenticated");
     }
 }

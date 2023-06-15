@@ -14,6 +14,9 @@ BASE_URL = 'http://localhost:8080/api'
 session_cookie = None
 session_cookie_name = 'JSESSIONID'
 
+# Global variable for user details
+user_details = None
+
 
 # GET request
 def get_request(endpoint, headers={}):
@@ -252,6 +255,8 @@ class Application(tk.Tk):
             tk.messagebox.showerror("Registration Failed", "Invalid credentials")
 
     def show_main_page(self):
+        global user_details
+
         self.clear_main_frame()
         self.main_frame.grid(row=0, column=0, padx=50, pady=50, sticky="nsew")
         self.main_frame.columnconfigure(0, weight=1)
@@ -264,29 +269,64 @@ class Application(tk.Tk):
         self.profile_frame = ttk.Frame(self.notebook)
 
         response = get_request("/user/me")
-        user_data = response.json()
+        user_details = response.json()
 
-        self.first_name_label = ttk.Label(self.profile_frame, text=f"First name: {user_data['firstName']}")
+        self.first_name_label = ttk.Label(self.profile_frame, text=f"First name: {user_details['firstName']}")
         self.first_name_label.pack(padx=10, pady=5, anchor=tk.W)
-        self.second_name_label = ttk.Label(self.profile_frame, text=f"Second name: {user_data['secondName']}")
+        self.second_name_label = ttk.Label(self.profile_frame, text=f"Second name: {user_details['secondName']}")
         self.second_name_label.pack(padx=10, pady=5, anchor=tk.W)
-        self.last_name_label = ttk.Label(self.profile_frame, text=f"Last name: {user_data['lastName']}")
+        self.last_name_label = ttk.Label(self.profile_frame, text=f"Last name: {user_details['lastName']}")
         self.last_name_label.pack(padx=10, pady=5, anchor=tk.W)
-        self.login_label = ttk.Label(self.profile_frame, text=f"Login: {user_data['login']}")
+        self.login_label = ttk.Label(self.profile_frame, text=f"Login: {user_details['login']}")
         self.login_label.pack(padx=10, pady=5, anchor=tk.W)
-        self.email_label = ttk.Label(self.profile_frame, text=f"Email: {user_data['email']}")
+        self.email_label = ttk.Label(self.profile_frame, text=f"Email: {user_details['email']}")
         self.email_label.pack(padx=10, pady=5, anchor=tk.W)
-        self.date_of_birth_label = ttk.Label(self.profile_frame, text=f"Date of birth: {user_data['dateOfBirth']}")
+        self.date_of_birth_label = ttk.Label(self.profile_frame, text=f"Date of birth: {user_details['dateOfBirth']}")
         self.date_of_birth_label.pack(padx=10, pady=5, anchor=tk.W)
-        self.place_of_birth_label = ttk.Label(self.profile_frame, text=f"Place of birth: {user_data['placeOfBirth']}")
+        self.place_of_birth_label = ttk.Label(self.profile_frame, text=f"Place of birth: {user_details['placeOfBirth']}")
         self.place_of_birth_label.pack(padx=10, pady=5, anchor=tk.W)
-        self.gender_label = ttk.Label(self.profile_frame, text=f"Gender: {user_data['gender']}")
+        self.gender_label = ttk.Label(self.profile_frame, text=f"Gender: {user_details['gender']}")
         self.gender_label.pack(padx=10, pady=5, anchor=tk.W)
 
         self.notebook.add(self.profile_frame, text="Profile")
 
         # accounts
         self.accounts_frame = ttk.Frame(self.notebook)
+        self.accounts_frame.grid_rowconfigure(0, weight=1)
+        self.accounts_frame.grid_columnconfigure((0, 1), weight=1)
+
+        self.accounts_treeview = ttk.Treeview(self.accounts_frame, columns=("Account Number", "Balance"), show="headings")
+        self.accounts_treeview.grid(row=0, column=0, columnspan=2, padx=10, pady=10, sticky="nsew")
+
+        self.accounts_treeview.heading("Account Number", text="Account Number")
+        self.accounts_treeview.heading("Balance", text="Balance")
+
+        response = get_request(f"/account?userId={user_details['id']}")
+        accounts = response.json()
+        for account in accounts:
+            self.accounts_treeview.insert("", tk.END, values=(account['accountNumber'], account['balance']))
+
+        self.account_form_frame = ttk.Frame(self.accounts_frame)
+        self.account_form_frame.grid(row=1, column=0, padx=10, pady=10, sticky=tk.W + tk.E + tk.N + tk.S)
+
+        self.account_number_label = ttk.Label(self.account_form_frame, text="Account Number:")
+        self.account_number_label.grid(row=0, column=0, padx=5, pady=5, sticky=tk.W)
+
+        self.account_number_entry = ttk.Entry(self.account_form_frame)
+        self.account_number_entry.grid(row=0, column=1, padx=5, pady=5, sticky=tk.W)
+
+        self.balance_label = ttk.Label(self.account_form_frame, text="Balance:")
+        self.balance_label.grid(row=1, column=0, padx=5, pady=5, sticky=tk.W)
+
+        self.balance_entry = ttk.Entry(self.account_form_frame)
+        self.balance_entry.grid(row=1, column=1, padx=5, pady=5, sticky=tk.W)
+
+        self.submit_button = ttk.Button(self.account_form_frame, text="Submit", command=self.create_account)
+        self.submit_button.grid(row=2, column=0, columnspan=2, padx=5, pady=10)
+
+        self.refresh_button = ttk.Button(self.accounts_frame, text="Refresh", command=self.refresh_accounts)
+        self.refresh_button.grid(row=1, column=1, columnspan=2, padx=5, pady=10)
+
         self.notebook.add(self.accounts_frame, text="Accounts")
 
         # transactions
@@ -295,6 +335,32 @@ class Application(tk.Tk):
 
         self.logout_button = ttk.Button(self.main_frame, text="Logout", command=self.create_home_page)
         self.logout_button.grid(row=1, column=0, pady=5)
+
+    def create_account(self):
+        account_data = {
+            'accountNumber': self.account_number_entry.get(),
+            'balance': self.balance_entry.get()
+        }
+        response = post_request(f"/account?userId={user_details['id']}", account_data)
+
+        if response.status_code == requests.codes.ok:
+            self.refresh_accounts()
+        else:
+            print(f"Cannot create new account with status code {response.status_code}")
+            tk.messagebox.showerror("Account creation failed", "Error")
+
+        self.account_number_entry.delete(0, tk.END)
+        self.balance_entry.delete(0, tk.END)
+
+    def refresh_accounts(self):
+        children = self.accounts_treeview.get_children()
+        for child in children:
+            self.accounts_treeview.delete(child)
+
+        response = get_request(f"/account?userId={user_details['id']}")
+        accounts = response.json()
+        for account in accounts:
+            self.accounts_treeview.insert("", tk.END, values=(account['accountNumber'], account['balance']))
 
 
     def clear_main_frame(self):
