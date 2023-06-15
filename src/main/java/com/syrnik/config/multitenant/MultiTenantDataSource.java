@@ -1,4 +1,4 @@
-package com.syrnik.config;
+package com.syrnik.config.multitenant;
 
 import org.springframework.jdbc.datasource.lookup.AbstractRoutingDataSource;
 

@@ -28,7 +28,7 @@ public class CentralDatabaseConfiguration {
 
     @Primary
     @Bean
-    @ConfigurationProperties("datasource.central-db")
+    @ConfigurationProperties("datasource.central")
     public DataSource centralDataSource() {
         return DataSourceBuilder.create().build();
     }
@@ -52,7 +52,7 @@ public class CentralDatabaseConfiguration {
     }
 
     @Bean
-    @ConfigurationProperties(prefix = "datasource.central-db.liquibase")
+    @ConfigurationProperties(prefix = "datasource.central.liquibase")
     public LiquibaseProperties centralLiquibaseProperties() {
         return new LiquibaseProperties();
     }

@@ -5,7 +5,7 @@ spring:
     enabled: true
 
 datasource:
-  central-db:
+  central:
     jdbc-url: jdbc:sqlserver://localhost:1433;databaseName=CentralDB;encrypt=true;trustServerCertificate=true;
     username: central_login
     password: Central_password1
@@ -13,17 +13,17 @@ datasource:
     liquibase:
       change-log: db/changelog/db.central.changelog-master.yml
   branches:
-    first-branch-db:
+    first-branch:
       url: jdbc:sqlserver://localhost:1433;databaseName=FirstBranchDB;encrypt=true;trustServerCertificate=true;
       username: first_branch_login
       password: First_branch_password1
       driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
-    second-branch-db:
+    second-branch:
       url: jdbc:sqlserver://localhost:1433;databaseName=SecondBranchDB;encrypt=true;trustServerCertificate=true;
       username: second_branch_login
       password: Second_branch_password1
       driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
-    third-branch-db:
+    third-branch:
       url: jdbc:sqlserver://localhost:1433;databaseName=ThirdBranchDB;encrypt=true;trustServerCertificate=true;
       username: third_branch_login
       password: Third_branch_password1

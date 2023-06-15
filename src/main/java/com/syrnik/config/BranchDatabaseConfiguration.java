@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import com.syrnik.config.multitenant.MultiTenantDataSource;
 
 @Data
 @Configuration

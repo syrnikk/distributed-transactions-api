@@ -3,7 +3,6 @@ package com.syrnik.security;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -13,7 +12,10 @@ import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationEntryPointFailureHandler;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
+
+import com.syrnik.config.multitenant.TenantFilter;
 
 import lombok.RequiredArgsConstructor;
 
@@ -24,6 +26,7 @@ public class SecurityConfiguration {
 
     private final AuthenticationSuccessHandler authenticationSuccessHandler;
     private final AuthenticationEntryPoint authenticationEntryPoint;
+    private final TenantFilter tenantFilter;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -45,6 +48,7 @@ public class SecurityConfiguration {
               .exceptionHandling(
                     httpSecurityExceptionHandlingConfigurer -> httpSecurityExceptionHandlingConfigurer.authenticationEntryPoint(
                           authenticationEntryPoint))
+              .addFilterAfter(tenantFilter, UsernamePasswordAuthenticationFilter.class)
               .build();
     }
 
