@@ -1,3 +1,4 @@
+import datetime
 import tkinter as tk
 from tkinter import ttk, messagebox
 
@@ -283,7 +284,8 @@ class Application(tk.Tk):
         self.email_label.pack(padx=10, pady=5, anchor=tk.W)
         self.date_of_birth_label = ttk.Label(self.profile_frame, text=f"Date of birth: {user_details['dateOfBirth']}")
         self.date_of_birth_label.pack(padx=10, pady=5, anchor=tk.W)
-        self.place_of_birth_label = ttk.Label(self.profile_frame, text=f"Place of birth: {user_details['placeOfBirth']}")
+        self.place_of_birth_label = ttk.Label(self.profile_frame,
+                                              text=f"Place of birth: {user_details['placeOfBirth']}")
         self.place_of_birth_label.pack(padx=10, pady=5, anchor=tk.W)
         self.gender_label = ttk.Label(self.profile_frame, text=f"Gender: {user_details['gender']}")
         self.gender_label.pack(padx=10, pady=5, anchor=tk.W)
@@ -295,15 +297,17 @@ class Application(tk.Tk):
         self.accounts_frame.grid_rowconfigure(0, weight=1)
         self.accounts_frame.grid_columnconfigure((0, 1), weight=1)
 
-        self.accounts_treeview = ttk.Treeview(self.accounts_frame, columns=("Account Number", "Balance"), show="headings")
+        self.accounts_treeview = ttk.Treeview(self.accounts_frame, columns=("Account Number", "Balance"),
+                                              show="headings")
         self.accounts_treeview.grid(row=0, column=0, columnspan=2, padx=10, pady=10, sticky="nsew")
 
         self.accounts_treeview.heading("Account Number", text="Account Number")
         self.accounts_treeview.heading("Balance", text="Balance")
 
         response = get_request(f"/account?userId={user_details['id']}")
-        accounts = response.json()
-        for account in accounts:
+        self.accounts = response.json()
+        for account in self.accounts:
+            print(account)
             self.accounts_treeview.insert("", tk.END, values=(account['accountNumber'], account['balance']))
 
         self.account_form_frame = ttk.Frame(self.accounts_frame)
@@ -331,6 +335,80 @@ class Application(tk.Tk):
 
         # transactions
         self.transactions_frame = ttk.Frame(self.notebook)
+        self.transactions_frame.grid_rowconfigure(0, weight=1)
+        self.transactions_frame.grid_columnconfigure((0, 1), weight=1)
+
+        self.transactions_treeview = ttk.Treeview(self.transactions_frame, columns=(
+            "Sender Account Number", "Recipient Account Number", "Amount", "Description", "Transaction Date"),
+                                                  show="headings")
+        self.transactions_treeview.grid(row=0, column=0, columnspan=2, padx=10, pady=10, sticky="nsew")
+
+        self.transactions_treeview.heading("Sender Account Number", text="Sender Account Number")
+        self.transactions_treeview.heading("Recipient Account Number", text="Recipient Account Number")
+        self.transactions_treeview.heading("Amount", text="Amount")
+        self.transactions_treeview.heading("Description", text="Description")
+        self.transactions_treeview.heading("Transaction Date", text="Transaction Date")
+
+        response = get_request(f"/transaction?userId={user_details['id']}")
+        self.transactions = response.json()
+        for transaction in self.transactions:
+            print(transaction)
+            self.transactions_treeview.insert("", tk.END, values=(
+                transaction['senderAccountNumber'], transaction['recipientAccountNumber'], transaction['amount'],
+                transaction['description'],
+                datetime.datetime.strptime(transaction['transactionDate'], "%Y-%m-%dT%H:%M:%S.%f").strftime(
+                    "%B %d, %Y %H:%M:%S")))
+
+        # Create a vertical scrollbar
+        self.vertical_scrollbar = ttk.Scrollbar(self.transactions_frame, orient="vertical",
+                                                command=self.transactions_treeview.yview)
+        self.vertical_scrollbar.grid(row=0, column=2, sticky="ns")
+
+        # Create a horizontal scrollbar
+        self.horizontal_scrollbar = ttk.Scrollbar(self.transactions_frame, orient="horizontal",
+                                                  command=self.transactions_treeview.xview)
+        self.horizontal_scrollbar.grid(row=1, column=0, columnspan=2, sticky="ew")
+
+        # Configure the treeview to use the scrollbars
+        self.transactions_treeview.configure(yscrollcommand=self.vertical_scrollbar.set,
+                                             xscrollcommand=self.horizontal_scrollbar.set)
+
+        self.transactions_form_frame = ttk.Frame(self.transactions_frame)
+        self.transactions_form_frame.grid(row=2, column=0, padx=10, pady=10, sticky=tk.W + tk.E + tk.N + tk.S)
+
+        self.sender_account_number_label = ttk.Label(self.transactions_form_frame, text="Sender Account Number:")
+        self.sender_account_number_label.grid(row=0, column=0, padx=5, pady=5, sticky=tk.W)
+
+        self.sender_account_number_combobox = ttk.Combobox(self.transactions_form_frame,
+                                                           values=[account['accountNumber'] for account in
+                                                                   self.accounts],
+                                                           state='readonly')
+        self.sender_account_number_combobox.grid(row=0, column=1, padx=10, pady=5)
+
+        self.recipient_account_number_label = ttk.Label(self.transactions_form_frame, text="Recipient Account Number:")
+        self.recipient_account_number_label.grid(row=1, column=0, padx=5, pady=5, sticky=tk.W)
+
+        self.recipient_account_number_entry = ttk.Entry(self.transactions_form_frame)
+        self.recipient_account_number_entry.grid(row=1, column=1, padx=5, pady=5, sticky=tk.W)
+
+        self.amount_label = ttk.Label(self.transactions_form_frame, text="Amount:")
+        self.amount_label.grid(row=2, column=0, padx=5, pady=5, sticky=tk.W)
+
+        self.amount_entry = ttk.Entry(self.transactions_form_frame)
+        self.amount_entry.grid(row=2, column=1, padx=5, pady=5, sticky=tk.W)
+
+        self.description_label = ttk.Label(self.transactions_form_frame, text="Description:")
+        self.description_label.grid(row=3, column=0, padx=5, pady=5, sticky=tk.W)
+
+        self.description_entry = ttk.Entry(self.transactions_form_frame)
+        self.description_entry.grid(row=3, column=1, padx=5, pady=5, sticky=tk.W)
+
+        self.submit_button = ttk.Button(self.transactions_form_frame, text="Submit", command=self.make_transaction)
+        self.submit_button.grid(row=4, column=0, columnspan=2, padx=5, pady=10)
+
+        self.refresh_button = ttk.Button(self.transactions_frame, text="Refresh", command=self.refresh_transactions)
+        self.refresh_button.grid(row=2, column=1, columnspan=2, padx=5, pady=10)
+
         self.notebook.add(self.transactions_frame, text="Transactions")
 
         self.logout_button = ttk.Button(self.main_frame, text="Logout", command=self.create_home_page)
@@ -358,10 +436,46 @@ class Application(tk.Tk):
             self.accounts_treeview.delete(child)
 
         response = get_request(f"/account?userId={user_details['id']}")
-        accounts = response.json()
-        for account in accounts:
+        self.accounts = response.json()
+        for account in self.accounts:
             self.accounts_treeview.insert("", tk.END, values=(account['accountNumber'], account['balance']))
 
+        self.sender_account_number_combobox['values'] = [account['accountNumber'] for account in self.accounts]
+
+    def make_transaction(self):
+        transaction_data = {
+            'senderAccountNumber': self.sender_account_number_combobox.get(),
+            'recipientAccountNumber': self.recipient_account_number_entry.get(),
+            'amount': self.amount_entry.get(),
+            'description': self.description_entry.get()
+        }
+
+        response = post_request(f"/transaction", transaction_data)
+
+        if response.status_code == requests.codes.ok:
+            self.refresh_transactions()
+        else:
+            print(f"Cannot make make transaction with status code {response.status_code}")
+            tk.messagebox.showerror("Transaction failed", response.text)
+
+        self.sender_account_number_combobox.set('')
+        self.recipient_account_number_entry.delete(0, tk.END)
+        self.amount_entry.delete(0, tk.END)
+        self.description_entry.delete(0, tk.END)
+
+    def refresh_transactions(self):
+        children = self.transactions_treeview.get_children()
+        for child in children:
+            self.transactions_treeview.delete(child)
+
+        response = get_request(f"/transaction?userId={user_details['id']}")
+        self.transactions = response.json()
+        for transaction in self.transactions:
+            self.transactions_treeview.insert("", tk.END, values=(
+                transaction['senderAccountNumber'], transaction['recipientAccountNumber'], transaction['amount'],
+                transaction['description'],
+                datetime.datetime.strptime(transaction['transactionDate'], "%Y-%m-%dT%H:%M:%S.%f").strftime(
+                    "%B %d, %Y %H:%M:%S")))
 
     def clear_main_frame(self):
         for widget in self.main_frame.winfo_children():
